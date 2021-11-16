@@ -9,6 +9,11 @@ from sklearn.base import TransformerMixin
 from pathlib import Path
 
 class Transformer(TransformerMixin):
+
+    def __init__(self, directory_path):
+        self.directory_path = directory_path
+#       directory_path : absolute path of the directory containing all folders of numpy files (until Extracted/)
+#                        /!\ DO NOT FORGET TO END THE STRING BY THE CHARACTER '/'
     
     def get_event_and_file_name(self, catalog_file, index:int):
         """
@@ -28,13 +33,11 @@ class Transformer(TransformerMixin):
             name = str(event + '_' + str(index))
             return event, name
     
-    def get_file_path(self, catalog_file, index, directory_path):
+    def get_file_path(self, catalog_file, index):
         """
         Input :
             - catalog_file : table associating the files with their information and indexes
             - index : index of the desired file row in the catalog_file
-            - directory_path : absolute path of the directory containing all folders of numpy files (until Extracted/)
-                               /!\ DO NOT FORGET TO END THE STRING BY THE CHARACTER '/'
         Output : return the relative path for the desired file
         """
         # on récupère le nom de l'event (dossier dans lequel est rangé le fichier) et du fichier
@@ -42,20 +45,18 @@ class Transformer(TransformerMixin):
         
         # on crée un string pour avoir le chemin du fichier
         end_folder_path = str(event + '/' + name + '.npy')
-        final_path = directory_path + end_folder_path
+        final_path = self.directory_path + end_folder_path
         return final_path
 
-    def open_file(self, catalog_file, index, directory_path):
+    def open_file(self, catalog_file, index):
         """
         Input :
             - catalog_file : table associating the files with their information and indexes
             - index : index of the desired file row in the catalog_file        
-            - directory_path : absolute path of the directory containing all folders of numpy files (until Extracted/)
-                               /!\ DO NOT FORGET TO END THE STRING BY THE CHARACTER '/'
         Output : loads the file at the desired index
         """
         # on récupère le chemin menant au fichier
-        path = self.get_file_path(catalog_file, index, directory_path)
+        path = self.get_file_path(catalog_file, index)
         
         if os.path.exists(path):
             file = np.load(path) # on ouvre le fichier seulement s'il existe
@@ -63,17 +64,15 @@ class Transformer(TransformerMixin):
         else:
             pass
     
-    def get_info_from_file(self, catalog_file, index, directory_path):
+    def get_info_from_file(self, catalog_file, index):
         """
         Input : 
             - catalog_file : table associating the files with their information and indexes
             - index : index of the desired file row in the catalog_file        
-            - directory_path : absolute path of the directory containing all folders of numpy files (until Extracted/)
-                               /!\ DO NOT FORGET TO END THE STRING BY THE CHARACTER '/'
         Output : Returns a tuple with the variance, mean, median, maximum and amplitude of the numpy array
         """
         try:
-            data = self.open_file(catalog_file, index, directory_path)
+            data = self.open_file(catalog_file, index)
             variance = np.var(data)
             mean = np.mean(data)
             median = np.median(data)
@@ -95,14 +94,14 @@ class Transformer(TransformerMixin):
         catalog_file.drop(columns_to_supp, axis=1, inplace=True)
         return catalog_file
     
-    def put_info_in_df(self, catalog_file, directory_path):
+    def put_info_in_df(self, catalog_file):
         """
         Input :
         Output :
         """
         for idx in catalog_file.index:
             try :
-                variance, mean, median, maximum, amplitude = self.get_info_from_file(catalog_file, idx, directory_path)
+                variance, mean, median, maximum, amplitude = self.get_info_from_file(catalog_file, idx)
                 catalog_file.loc[idx, 'variance'] = variance
                 catalog_file.loc[idx, 'mean'] = mean
                 catalog_file.loc[idx, 'median'] = median
@@ -112,17 +111,15 @@ class Transformer(TransformerMixin):
                 pass
         return catalog_file
 
-    def fit_transform(self, X, directory_path, y=None):
+    def fit_transform(self, X, y=None):
         """
         Input :
             - X : array-like of shape (n_samples, n_features)
             - y : array-like of shape (n_samples,) or (n_samples, n_outputs), default=None
-            - directory_path : absolute path of the directory containing all folders of numpy files (until Extracted/)
-                               /!\ DO NOT FORGET TO END THE STRING BY THE CHARACTER '/'
         Output : returns a fit_transformed X array
         """
         X_supp_cols = self.supp_columns(X)
-        X_add_cols = self.put_info_in_df(X_supp_cols, directory_path)
+        X_add_cols = self.put_info_in_df(X_supp_cols)
         return X_add_cols
 
 
