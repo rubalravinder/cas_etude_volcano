@@ -2,6 +2,12 @@
 #   - récupérer à partir des 2 1eres colonnes du fichier association_table_corrected_index.xlsx le nom du fichier numpy
 #   - créer un chemin pour aller récupérer les données du fichier numpy
 
+import pandas as pd
+import numpy as np
+import os
+from sklearn.base import TransformerMixin
+from pathlib import Path
+
 class Transformer(TransformerMixin):
     
     def get_event_and_file_name(self, catalog_file, index:int):
@@ -89,14 +95,14 @@ class Transformer(TransformerMixin):
         catalog_file.drop(columns_to_supp, axis=1, inplace=True)
         return catalog_file
     
-    def put_info_in_df(self, catalog_file, index, directory_path):
+    def put_info_in_df(self, catalog_file, directory_path):
         """
         Input :
         Output :
         """
         for idx in catalog_file.index:
             try :
-                variance, mean, median, maximum, amplitude = transfo.get_info_from_file(catalog_file, idx, directory_path)
+                variance, mean, median, maximum, amplitude = self.get_info_from_file(catalog_file, idx, directory_path)
                 catalog_file.loc[idx, 'variance'] = variance
                 catalog_file.loc[idx, 'mean'] = mean
                 catalog_file.loc[idx, 'median'] = median
@@ -105,6 +111,20 @@ class Transformer(TransformerMixin):
             except:
                 pass
         return catalog_file
+
+    def fit_transform(self, X, directory_path, y=None):
+        """
+        Input :
+            - X : array-like of shape (n_samples, n_features)
+            - y : array-like of shape (n_samples,) or (n_samples, n_outputs), default=None
+            - directory_path : absolute path of the directory containing all folders of numpy files (until Extracted/)
+                               /!\ DO NOT FORGET TO END THE STRING BY THE CHARACTER '/'
+        Output : returns a fit_transformed X array
+        """
+        X_supp_cols = self.supp_columns(X)
+        X_add_cols = self.put_info_in_df(X_supp_cols, directory_path)
+        return X_add_cols
+
 
 if __name__ == '__main__':
     print('class Transformer successfully imported')
