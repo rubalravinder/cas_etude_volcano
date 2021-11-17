@@ -24,6 +24,7 @@ class Transformer(TransformerMixin):
         """
         list_of_file_directories = ['EXP','HIB','LP','PIS','TOR','TR','VT']
         event = catalog_file.loc[index,'Event']
+
         # on supprime le dernier caractère pour avoir le nom du dossier où est le fichier
         if event not in list_of_file_directories:
             event_without_last_digit = event[:-1]
@@ -32,6 +33,20 @@ class Transformer(TransformerMixin):
         else:
             name = str(event + '_' + str(index))
             return event, name
+
+    def put_event_in_df(self,catalog_file):
+        """
+        Input :
+            - catalog_file : table associating the files with their information and indexes
+        Output : creates a column in the dataframe for the type of event
+        """
+        for idx in catalog_file.index:
+            try :
+                event, name = self.get_event_and_file_name(catalog_file, idx)
+                catalog_file.loc[idx, 'event'] = event
+            except:
+                pass
+        return catalog_file
     
     def get_file_path(self, catalog_file, index):
         """
@@ -47,6 +62,20 @@ class Transformer(TransformerMixin):
         end_folder_path = str(event + '/' + name + '.npy')
         final_path = self.directory_path + end_folder_path
         return final_path
+    
+    def put_path_in_df(self, catalog_file):
+        """
+        Input :
+            - catalog_file : table associating the files with their information and indexes
+        Output : creates a column in the dataframe for the file path of each numpy file
+        """
+        for idx in catalog_file.index:
+            try :
+                path = self.get_file_path(catalog_file, idx)
+                catalog_file.loc[idx, 'path'] = path
+            except:
+                pass
+        return catalog_file
 
     def open_file(self, catalog_file, index):
         """
@@ -97,7 +126,8 @@ class Transformer(TransformerMixin):
     def put_info_in_df(self, catalog_file):
         """
         Input :
-        Output :
+            - catalog_file : table associating the files with their information and indexes
+        Output : creates a different column for variance, mean, median, maximum and amplitude of each numpy array.
         """
         for idx in catalog_file.index:
             try :
@@ -118,7 +148,9 @@ class Transformer(TransformerMixin):
         Output : returns a fit_transformed X array
         """
         X_copy = X.copy()
-        X_supp_cols = self.supp_columns(X_copy)
+        X_with_event = self.put_event_in_df(X_copy)
+        X_with_path = self.put_path_in_df(X_with_event)
+        X_supp_cols = self.supp_columns(X_with_path)
         X_add_cols = self.put_info_in_df(X_supp_cols)
         return X_add_cols
 
