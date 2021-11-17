@@ -111,11 +111,10 @@ class Transformer(TransformerMixin):
                 pass
         return catalog_file
 
-    def fit_transform(self, X, y=None):
+    def fit_transform(self, X):
         """
         Input :
             - X : array-like of shape (n_samples, n_features)
-            - y : array-like of shape (n_samples,) or (n_samples, n_outputs), default=None
         Output : returns a fit_transformed X array
         """
         X_supp_cols = self.supp_columns(X)
