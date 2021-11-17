@@ -15,4 +15,4 @@ def balanced_subsampler(df:pd.DataFrame, samples_per_class:int) -> pd.DataFrame:
         indices.append(index)
         counter[row.event] += 1
 
-    return df[df.Index.isin(indices)].copy()
+    return df[df.Index.isin(indices)].copy().sample(frac=1)
