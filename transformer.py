@@ -117,7 +117,8 @@ class Transformer(TransformerMixin):
             - X : array-like of shape (n_samples, n_features)
         Output : returns a fit_transformed X array
         """
-        X_supp_cols = self.supp_columns(X)
+        X_copy = X.copy()
+        X_supp_cols = self.supp_columns(X_copy)
         X_add_cols = self.put_info_in_df(X_supp_cols)
         return X_add_cols
 
