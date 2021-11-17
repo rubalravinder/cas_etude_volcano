@@ -8,6 +8,8 @@ import os
 from sklearn.base import TransformerMixin
 from pathlib import Path
 
+
+
 class Transformer(TransformerMixin):
 
     def __init__(self, directory_path):
@@ -156,20 +158,19 @@ class Transformer(TransformerMixin):
 
 class Event(TransformerMixin):
 
-    def get_event(self, df, index:int):
+    def __init__(self):
+        self.list_of_file_directories = ['EXP','HIB','LP','PIS','TOR','TR','VT']
+
+    def get_event(self, event:str):
         """
         Input :
-            - df : table associating the files with their information and indexes
-            - index : index of the desired file row in the catalog_file
+            - event : the full name string of the event name
         Output : event associated with file, directory where the file is stored and string with the name of the file
         """
-        list_of_file_directories = ['EXP','HIB','LP','PIS','TOR','TR','VT']
-        event = df.loc[index,'Event']
 
         # on supprime le dernier caractère pour avoir le nom du dossier où est le fichier
-        if event not in list_of_file_directories:
-            event_without_last_digit = event[:-1]
-            return event_without_last_digit
+        if event not in self.list_of_file_directories:
+            return event[:-1]
         else:
             return event
 
@@ -179,13 +180,10 @@ class Event(TransformerMixin):
             - df : table associating the files with their information and indexes
         Output : creates a column in the dataframe for the type of event
         """
-        for idx in df.index:
-            try :
-                event, name = self.get_event(df, idx)
-                df.loc[idx, 'event'] = event
-            except:
-                pass
-        return df
+        event_list = []
+        for idx, row in df.iterrows():
+            event_list.append(self.get_event(row.Event))
+        df["event"] = event_list
 
     def fit_transform(self, X):
         """
@@ -194,8 +192,8 @@ class Event(TransformerMixin):
         Output : returns a fit_transformed X array
         """
         X_copy = X.copy()
-        X_with_event = self.put_event_in_df(X_copy)
-        return X_with_event
+        self.put_event_in_df(X_copy)
+        return X_copy
 
 
 if __name__ == '__main__':

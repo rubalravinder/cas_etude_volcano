@@ -1,6 +1,13 @@
 import pandas as pd
 from collections import Counter
 
+types_vocab = ["EXP", "HIB", "LP", "PIS", "TOR", "TR", "VT"]
+def event_class(event:str):
+    if event in types_vocab:
+        return event
+    else:
+        return event[:-1]
+
 def balanced_subsampler(df:pd.DataFrame, samples_per_class:int) -> pd.DataFrame:
     if samples_per_class > df.event.value_counts().min():
         raise ValueError(f"There are less than {samples_per_class} samples in at least one class.")
