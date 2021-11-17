@@ -1,4 +1,5 @@
 data/
 notebook/
-__pychache__/
-preprocessing.ipynb
+__pycache__/
+.vscode/
+.ipynb_checkpoints/
