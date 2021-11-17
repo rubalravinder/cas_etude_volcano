@@ -154,6 +154,49 @@ class Transformer(TransformerMixin):
         X_add_cols = self.put_info_in_df(X_supp_cols)
         return X_add_cols
 
+class Event(TransformerMixin):
+
+    def get_event(self, df, index:int):
+        """
+        Input :
+            - df : table associating the files with their information and indexes
+            - index : index of the desired file row in the catalog_file
+        Output : event associated with file, directory where the file is stored and string with the name of the file
+        """
+        list_of_file_directories = ['EXP','HIB','LP','PIS','TOR','TR','VT']
+        event = df.loc[index,'Event']
+
+        # on supprime le dernier caractère pour avoir le nom du dossier où est le fichier
+        if event not in list_of_file_directories:
+            event_without_last_digit = event[:-1]
+            return event_without_last_digit
+        else:
+            return event
+
+    def put_event_in_df(self,df):
+        """
+        Input :
+            - df : table associating the files with their information and indexes
+        Output : creates a column in the dataframe for the type of event
+        """
+        for idx in df.index:
+            try :
+                event, name = self.get_event(df, idx)
+                df.loc[idx, 'event'] = event
+            except:
+                pass
+        return df
+
+    def fit_transform(self, X):
+        """
+        Input :
+            - X : array-like of shape (n_samples, n_features)
+        Output : returns a fit_transformed X array
+        """
+        X_copy = X.copy()
+        X_with_event = self.put_event_in_df(X_copy)
+        return X_with_event
+
 
 if __name__ == '__main__':
-    print('class Transformer successfully imported')
+    print('class Transformer and Event successfully imported')
