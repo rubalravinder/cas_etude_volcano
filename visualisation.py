@@ -17,5 +17,5 @@ def visu_pca(y_pred, X_test):
     data_merged.rename(columns={0:'y'}, inplace=True)
     pca = PCA(n_components=2)
     components = pca.fit_transform(data_merged)
-    fig = px.scatter(components, x=0, y=1, color=data_merged["y"])
+    fig = px.scatter(components, x=0, y=1, color=data_merged["y"], width=500, height=400)
     fig.show()
