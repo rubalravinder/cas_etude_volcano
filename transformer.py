@@ -9,7 +9,7 @@ from sklearn.base import TransformerMixin
 from pathlib import Path
 from scipy import stats
 import math
-from numpy.fft import fft 
+from numpy.fft import fft
 from scipy import fftpack
 
 
@@ -19,16 +19,17 @@ class Transformer(TransformerMixin):
         self.directory_path = directory_path
 #       directory_path : absolute path of the directory containing all folders of numpy files (until Extracted/)
 #                        /!\ DO NOT FORGET TO END THE STRING BY THE CHARACTER '/'
-    
-    def get_event_and_file_name(self, catalog_file, index:int):
+
+    def get_event_and_file_name(self, catalog_file, index: int):
         """
         Input :
             - catalog_file : table associating the files with their information and indexes
             - index : index of the desired file row in the catalog_file
         Output : event associated with file, directory where the file is stored and string with the name of the file
         """
-        list_of_file_directories = ['EXP','HIB','LP','PIS','TOR','TR','VT']
-        event = catalog_file.loc[index,'Event']
+        list_of_file_directories = [
+            'EXP', 'HIB', 'LP', 'PIS', 'TOR', 'TR', 'VT']
+        event = catalog_file.loc[index, 'Event']
 
         # on supprime le dernier caractère pour avoir le nom du dossier où est le fichier
         if event not in list_of_file_directories:
@@ -39,20 +40,20 @@ class Transformer(TransformerMixin):
             name = str(event + '_' + str(index))
             return event, name
 
-    def put_event_in_df(self,catalog_file):
+    def put_event_in_df(self, catalog_file):
         """
         Input :
             - catalog_file : table associating the files with their information and indexes
         Output : creates a column in the dataframe for the type of event
         """
         for idx in catalog_file.index:
-            try :
+            try:
                 event, name = self.get_event_and_file_name(catalog_file, idx)
                 catalog_file.loc[idx, 'event'] = event
             except:
                 pass
         return catalog_file
-    
+
     def get_file_path(self, catalog_file, index):
         """
         Input :
@@ -62,12 +63,12 @@ class Transformer(TransformerMixin):
         """
         # on récupère le nom de l'event (dossier dans lequel est rangé le fichier) et du fichier
         event, name = self.get_event_and_file_name(catalog_file, index)
-        
+
         # on crée un string pour avoir le chemin du fichier
         end_folder_path = str(event + '/' + name + '.npy')
         final_path = self.directory_path + end_folder_path
         return final_path
-    
+
     def put_path_in_df(self, catalog_file):
         """
         Input :
@@ -75,7 +76,7 @@ class Transformer(TransformerMixin):
         Output : creates a column in the dataframe for the file path of each numpy file
         """
         for idx in catalog_file.index:
-            try :
+            try:
                 path = self.get_file_path(catalog_file, idx)
                 catalog_file.loc[idx, 'path'] = path
             except:
@@ -91,57 +92,54 @@ class Transformer(TransformerMixin):
         """
         # on récupère le chemin menant au fichier
         path = self.get_file_path(catalog_file, index)
-        
+
         if os.path.exists(path):
-            file = np.load(path) # on ouvre le fichier seulement s'il existe
+            file = np.load(path)  # on ouvre le fichier seulement s'il existe
             return file
         else:
             pass
-        
-    def TF(self, data:np.ndarray)->np.ndarray:  
-        
+
+    def TF(self, data: np.ndarray) -> np.ndarray:
+
         tfd = fft(data)
-        N=len(data)
-        spectre = np.absolute(tfd)*2/N  
-        return spectre   
-    
-    
+        N = len(data)
+        spectre = np.absolute(tfd)*2/N
+        return spectre
+
     def get_info_from_file(self, catalog_file, index):
         """
         Input : 
             - catalog_file : table associating the files with their information and indexes
             - index : index of the desired file row in the catalog_file        
         Output : Returns a tuple with the variance, mean, median, maximum and amplitude of the numpy array
-        """        
+        """
 
         # try:
         data = self.open_file(catalog_file, index)
         data_TF = self.TF(data)
-        
+
         variance = np.var(data)
         mean = np.mean(data)
-        median = np.median(data)            
+        median = np.median(data)
         maximum = np.amax(data)
         minimum = np.amin(data)
         amplitude = maximum - minimum
-        kurtosis= stats.kurtosis(data)
-        skew=stats.skew(data)  
+        kurtosis = stats.kurtosis(data)
+        skew = stats.skew(data)
         variance_TF = np.var(data_TF)
         mean_TF = np.mean(data_TF)
-        median_TF = np.median(data_TF)            
+        median_TF = np.median(data_TF)
         maximum_TF = np.amax(data_TF)
         minimum_TF = np.amin(data_TF)
         amplitude_TF = maximum_TF - minimum_TF
-        kurtosis_TF= stats.kurtosis(data_TF)
-        skew_TF=stats.skew(data_TF) 
-        
-        return variance, mean, median, maximum, amplitude, kurtosis, skew, variance_TF, mean_TF, median_TF, maximum_TF,                        amplitude_TF, kurtosis_TF, skew_TF
+        kurtosis_TF = stats.kurtosis(data_TF)
+        skew_TF = stats.skew(data_TF)
+
+        return variance, mean, median, maximum, amplitude, kurtosis, skew, variance_TF, mean_TF, median_TF, maximum_TF, amplitude_TF, kurtosis_TF, skew_TF
         # except:
         #     pass
-       
-      
-    
-    def supp_columns(self, catalog_file, columns_to_supp=["File name","File start" ,"File end" ,"Unnamed: 10" ,"Unnamed: 11" ,"Unnamed: 12"]):
+
+    def supp_columns(self, catalog_file, columns_to_supp=["File name", "File start", "File end", "Unnamed: 10", "Unnamed: 11", "Unnamed: 12"]):
         """
         Input :
             - catalog_file : table associating the files with their information and indexes
@@ -151,7 +149,7 @@ class Transformer(TransformerMixin):
         """
         catalog_file.drop(columns_to_supp, axis=1, inplace=True)
         return catalog_file
-    
+
     def put_info_in_df(self, catalog_file):
         """
         Input :
@@ -159,10 +157,11 @@ class Transformer(TransformerMixin):
         Output : creates a different column for variance, mean, median, maximum and amplitude of each numpy array.
         """
         for idx in catalog_file.index:
-            
+
             # try :
-            variance, mean, median, maximum, amplitude, kurtosis, skew , variance_TF , mean_TF, median_TF, maximum_TF,                                              amplitude_TF, kurtosis_TF, skew_TF = self.get_info_from_file(catalog_file, idx)
-            
+            variance, mean, median, maximum, amplitude, kurtosis, skew, variance_TF, mean_TF, median_TF, maximum_TF,                                              amplitude_TF, kurtosis_TF, skew_TF = self.get_info_from_file(
+                catalog_file, idx)
+
             catalog_file.loc[idx, 'variance'] = variance
             catalog_file.loc[idx, 'mean'] = mean
             catalog_file.loc[idx, 'median'] = median
@@ -170,15 +169,14 @@ class Transformer(TransformerMixin):
             catalog_file.loc[idx, 'amplitude'] = amplitude
             catalog_file.loc[idx, 'kurtosis'] = kurtosis
             catalog_file.loc[idx, 'skew'] = skew
-            catalog_file.loc[idx, 'variance_TF']=variance_TF
-            catalog_file.loc[idx, 'mean_TF']=mean_TF
-            catalog_file.loc[idx, 'median_TF']=median_TF
+            catalog_file.loc[idx, 'variance_TF'] = variance_TF
+            catalog_file.loc[idx, 'mean_TF'] = mean_TF
+            catalog_file.loc[idx, 'median_TF'] = median_TF
             catalog_file.loc[idx, 'maximum_TF'] = maximum_TF
-            catalog_file.loc[idx, 'amplitude_TF']= amplitude_TF        
-            catalog_file.loc[idx, 'kurtosis_TF']=kurtosis_TF
-            catalog_file.loc[idx, 'skew_TF'] = skew_TF            
-                             
-            
+            catalog_file.loc[idx, 'amplitude_TF'] = amplitude_TF
+            catalog_file.loc[idx, 'kurtosis_TF'] = kurtosis_TF
+            catalog_file.loc[idx, 'skew_TF'] = skew_TF
+
             # except:
             #     pass
         return catalog_file
@@ -196,12 +194,14 @@ class Transformer(TransformerMixin):
         X_add_cols = self.put_info_in_df(X_supp_cols)
         return X_add_cols
 
+
 class Event(TransformerMixin):
 
     def __init__(self):
-        self.list_of_file_directories = ['EXP','HIB','LP','PIS','TOR','TR','VT']
+        self.list_of_file_directories = [
+            'EXP', 'HIB', 'LP', 'PIS', 'TOR', 'TR', 'VT']
 
-    def get_event(self, event:str):
+    def get_event(self, event: str):
         """
         Input :
             - event : the full name string of the event name
@@ -214,7 +214,7 @@ class Event(TransformerMixin):
         else:
             return event
 
-    def put_event_in_df(self,df):
+    def put_event_in_df(self, df):
         """
         Input :
             - df : table associating the files with their information and indexes
