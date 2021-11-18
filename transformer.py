@@ -8,6 +8,9 @@ import os
 from sklearn.base import TransformerMixin
 from pathlib import Path
 from scipy import stats
+import math
+from numpy.fft import fft 
+from scipy import fftpack
 
 
 class Transformer(TransformerMixin):
@@ -94,6 +97,15 @@ class Transformer(TransformerMixin):
             return file
         else:
             pass
+        
+    def TF(self, catalog_file, index):  
+        
+        data= self.open_file(catalog_file, index)
+        tfd = fft(data)
+        N=len(data)
+        spectre = np.absolute(tfd)*2/N  
+        return spectre   
+    
     
     def get_info_from_file(self, catalog_file, index):
         """
@@ -101,10 +113,12 @@ class Transformer(TransformerMixin):
             - catalog_file : table associating the files with their information and indexes
             - index : index of the desired file row in the catalog_file        
         Output : Returns a tuple with the variance, mean, median, maximum and amplitude of the numpy array
-        """
-        
+        """        
+
         # try:
         data = self.open_file(catalog_file, index)
+        data_TF = self.TF(data,index)
+        
         variance = np.var(data)
         mean = np.mean(data)
         median = np.median(data)            
@@ -112,10 +126,21 @@ class Transformer(TransformerMixin):
         minimum = np.amin(data)
         amplitude = maximum - minimum
         kurtosis= stats.kurtosis(data)
-        skew=stats.skew(data)            
-        return variance, mean, median, maximum, amplitude, kurtosis, skew
+        skew=stats.skew(data)  
+        variance_TF = np.var(data_TF)
+        mean_TF = np.mean(data_TF)
+        median_TF = np.median(data_TF)            
+        maximum_TF = np.amax(data_TF)
+        minimum_TF = np.amin(data_TF)
+        amplitude_TF = maximum_TF - minimum_TF
+        kurtosis_TF= stats.kurtosis(data_TF)
+        skew_TF=stats.skew(data_TF) 
+        
+        return variance, mean, median, maximum, amplitude, kurtosis, skew, variance_TF, mean_TF, median_TF, maximum_TF,                        amplitude_TF, kurtosis_TF, skew_TF
         # except:
         #     pass
+       
+      
     
     def supp_columns(self, catalog_file, columns_to_supp=["File name","File start" ,"File end" ,"Unnamed: 10" ,"Unnamed: 11" ,"Unnamed: 12"]):
         """
@@ -137,7 +162,8 @@ class Transformer(TransformerMixin):
         for idx in catalog_file.index:
             
             # try :
-            variance, mean, median, maximum, amplitude, kurtosis, skew = self.get_info_from_file(catalog_file, idx)
+            variance, mean, median, maximum, amplitude, kurtosis, skew , variance_TF , mean_TF, median_TF, maximum_TF,                                              amplitude_TF, kurtosis_TF, skew_TF = self.get_info_from_file(catalog_file, idx)
+            
             catalog_file.loc[idx, 'variance'] = variance
             catalog_file.loc[idx, 'mean'] = mean
             catalog_file.loc[idx, 'median'] = median
@@ -145,6 +171,15 @@ class Transformer(TransformerMixin):
             catalog_file.loc[idx, 'amplitude'] = amplitude
             catalog_file.loc[idx, 'kurtosis'] = kurtosis
             catalog_file.loc[idx, 'skew'] = skew
+            catalog_file.loc[idx, 'variance_TF']=variance_TF
+            catalog_file.loc[idx, 'mean_TF']=mean_TF
+            catalog_file.loc[idx, 'median_TF']=median_TF
+            catalog_file.loc[idx, 'maximum_TF'] = maximum_TF
+            catalog_file.loc[idx, 'amplitude_TF']= amplitude_TF        
+            catalog_file.loc[idx, 'kurtosis_TF']=kurtosis_TF
+            catalog_file.loc[idx, 'skew_TF'] = skew_TF            
+                             
+            
             # except:
             #     pass
         return catalog_file
