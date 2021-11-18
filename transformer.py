@@ -98,9 +98,8 @@ class Transformer(TransformerMixin):
         else:
             pass
         
-    def TF(self, catalog_file, index):  
+    def TF(self, data:np.ndarray)->np.ndarray:  
         
-        data= self.open_file(catalog_file, index)
         tfd = fft(data)
         N=len(data)
         spectre = np.absolute(tfd)*2/N  
@@ -117,7 +116,7 @@ class Transformer(TransformerMixin):
 
         # try:
         data = self.open_file(catalog_file, index)
-        data_TF = self.TF(data,index)
+        data_TF = self.TF(data)
         
         variance = np.var(data)
         mean = np.mean(data)
