@@ -7,7 +7,8 @@ import numpy as np
 import os
 from sklearn.base import TransformerMixin
 from pathlib import Path
-
+from scipy.stats import kurtosis
+from scipy.stats import skew
 
 
 class Transformer(TransformerMixin):
@@ -102,15 +103,18 @@ class Transformer(TransformerMixin):
             - index : index of the desired file row in the catalog_file        
         Output : Returns a tuple with the variance, mean, median, maximum and amplitude of the numpy array
         """
+        
         try:
             data = self.open_file(catalog_file, index)
             variance = np.var(data)
             mean = np.mean(data)
-            median = np.median(data)
+            median = np.median(data)            
             maximum = np.amax(data)
             minimum = np.amin(data)
             amplitude = maximum - minimum
-            return variance, mean, median, maximum, amplitude
+            kurtosis= 0 #kurtosis(data)
+            skew=0 #skew(data)            
+            return variance, mean, median, maximum, amplitude, kurtosis, skew
         except:
             pass
     
@@ -132,13 +136,16 @@ class Transformer(TransformerMixin):
         Output : creates a different column for variance, mean, median, maximum and amplitude of each numpy array.
         """
         for idx in catalog_file.index:
+            
             try :
-                variance, mean, median, maximum, amplitude = self.get_info_from_file(catalog_file, idx)
+                variance, mean, median, maximum, amplitude, kurtosis, skew = self.get_info_from_file(catalog_file, idx)
                 catalog_file.loc[idx, 'variance'] = variance
                 catalog_file.loc[idx, 'mean'] = mean
                 catalog_file.loc[idx, 'median'] = median
                 catalog_file.loc[idx, 'maximum'] = maximum
                 catalog_file.loc[idx, 'amplitude'] = amplitude
+                catalog_file.loc[idx, 'kurtosis'] = kurtosis
+                catalog_file.loc[idx, 'skew'] = skew
             except:
                 pass
         return catalog_file
