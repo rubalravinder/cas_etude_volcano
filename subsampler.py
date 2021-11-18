@@ -22,7 +22,7 @@ def balanced_subsampler(df:pd.DataFrame, samples_per_class:int) -> pd.DataFrame:
             continue
         filename = "data/Extracted/" + row.event + "/" + row.event + "_" + str(row.Index) + ".npy"
         if not os.path.isfile(filename):
-            print(f'missing file {filename}')
+            # print(f'missing file {filename}')
             continue
         indices.append(index)
         counter[row.event] += 1
