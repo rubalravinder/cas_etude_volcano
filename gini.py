@@ -1,14 +1,9 @@
 import numpy as np
 
-def gini(x):
-    # (Warning: This is a concise implementation, but it is O(n**2)
-    # in time and memory, where n = len(x).  *Don't* pass in huge
-    # samples!)
 
-    # Mean absolute difference
-    mad = np.abs(np.subtract.outer(x, x)).mean()
-    # Relative mean absolute difference
-    rmad = mad/np.mean(x)
-    # Gini coefficient
-    g = 0.5 * rmad
-    return g
+def gini(x):
+    unique, counts = np.unique(x, return_counts=True)
+    dict_counts = dict(zip(unique, counts))
+    p_list = [dict_counts[i] /
+              len(x) if i in dict_counts else 0 for i in range(unique.max() + 1)]
+    return sum([p * (1-p) for p in p_list])
